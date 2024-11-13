@@ -16,7 +16,7 @@ app.get('/test', async (req, res) => {
 
   if (errorEnabled) {
 
-    res.status(errorCode).json({ error: errorMessage, service: serviceName, version: version  });
+    res.status(errorCode).json({ error: { errorCode: errorCode, errorMessage: errorMessage }, service: serviceName, version: version  });
 
   } else {
 
