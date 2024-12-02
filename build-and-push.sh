@@ -4,7 +4,7 @@
 DOCKER_USERNAME="canpolatoral"
 CALLER_IMAGE_NAME="caller-service"
 RECEIVER_IMAGE_NAME="receiver-service"
-VERSION="1.0.0" # You can change this to a specific version if needed
+VERSION="1.0.2" # You can change this to a specific version if needed
 
 # Build caller-service service image
 echo "Building ${CALLER_IMAGE_NAME} image..."

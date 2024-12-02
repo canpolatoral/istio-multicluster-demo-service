@@ -1,15 +1,36 @@
 // transfer/app.js
 
-const express = require('express');
-const axios = require('axios');
+import express from 'express';
+import axios from 'axios';
+import * as AxiosLogger from 'axios-logger';
+
 const app = express();
+
+const axiosInstance = axios.create();
+axiosInstance.interceptors.request.use(AxiosLogger.requestLogger);
+axiosInstance.interceptors.response.use(AxiosLogger.responseLogger);
+
+// const requestResponseLogEnabled = process.env.REQUEST_RESPONSE_LOG_ENABLED || true;
 
 const serviceName = process.env.SERVICE_NAME || 'caller-service';
 const version = process.env.VERSION || 'v1';
 const targetServiceUrl = process.env.TARGET_SERVICE_URL || 'http://localhost:3000';
+
 const errorEnabled = process.env.ERROR_ENABLED || false;
 const errorCode = process.env.ERROR_CODE || 200;
 const errorMessage = process.env.ERROR_MESSAGE || 'Error message';
+
+const clientCredentialsAuthEnabled = process.env.CLIENT_CREDENTIALS_AUTH_ENABLED || false;
+const jwtAuthUrl = process.env.JWT_AUTH_URL;
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+
+///// for test only
+// const clientCredentialsAuthEnabled = true;
+// const clientId = 'test-client-id';
+// const clientSecret = 'test-secret';
+// const jwtAuthUrl = 'http://172.18.0.6/realms/test/protocol/openid-connect/token';
+//////////
 
 
 app.get('/test', async (req, res) => {
@@ -20,8 +41,37 @@ app.get('/test', async (req, res) => {
 
   } else {
 
+    var authResponse;
+
+    if (clientCredentialsAuthEnabled) {
+  
+      try {
+        const data = new URLSearchParams({
+          grant_type: 'client_credentials',
+          client_id: clientId,
+          client_secret: clientSecret,
+        });
+        
+        authResponse = await axiosInstance
+          .post(jwtAuthUrl, data.toString(), {
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+          })
+      } catch (error) {
+        res.status(200).json({ error: `Authentication failed`, errorDetail: error });
+        return
+      }
+    }
+
     try {
-      const targetServiceResponse = await axios.get(targetServiceUrl + '/test');
+
+      const targetServiceResponse = await axiosInstance.get(targetServiceUrl + '/test', {
+        headers: {
+          Authorization: authResponse.data.access_token, // Replace YOUR_ACCESS_TOKEN with the actual token
+        },
+      });      
+      
       res.json({
         service: serviceName,
         version: version,
