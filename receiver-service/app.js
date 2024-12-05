@@ -1,7 +1,10 @@
 // account/app.js
+import express from 'express';
+import morgan from 'morgan';
 
-const express = require('express');
 const app = express();
+
+app.use(morgan('combined'))
 
 const serviceName = process.env.SERVICE_NAME || 'receiver-service';
 const version = process.env.VERSION || 'v1';

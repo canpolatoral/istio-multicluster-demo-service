@@ -3,12 +3,19 @@
 import express from 'express';
 import axios from 'axios';
 import * as AxiosLogger from 'axios-logger';
+import morgan from 'morgan';
 
 const app = express();
+
+app.use(morgan('combined'))
 
 const axiosInstance = axios.create();
 axiosInstance.interceptors.request.use(AxiosLogger.requestLogger);
 axiosInstance.interceptors.response.use(AxiosLogger.responseLogger);
+
+AxiosLogger.setGlobalConfig({
+  headers: true
+});
 
 // const requestResponseLogEnabled = process.env.REQUEST_RESPONSE_LOG_ENABLED || true;
 
@@ -29,7 +36,7 @@ const clientSecret = process.env.CLIENT_SECRET;
 // const clientCredentialsAuthEnabled = true;
 // const clientId = 'test-client-id';
 // const clientSecret = 'test-secret';
-// const jwtAuthUrl = 'http://172.18.0.6/realms/test/protocol/openid-connect/token';
+// const jwtAuthUrl = 'http://172.18.0.10/realms/test/protocol/openid-connect/token';
 //////////
 
 
@@ -66,11 +73,19 @@ app.get('/test', async (req, res) => {
 
     try {
 
-      const targetServiceResponse = await axiosInstance.get(targetServiceUrl + '/test', {
-        headers: {
-          Authorization: authResponse.data.access_token, // Replace YOUR_ACCESS_TOKEN with the actual token
-        },
-      });      
+      var targetServiceResponse;
+
+      if (clientCredentialsAuthEnabled) {
+
+        targetServiceResponse = await axiosInstance.get(targetServiceUrl + '/test', {
+          headers: {
+            Authorization: `Bearer ${authResponse.data.access_token}`,
+          },
+        });  
+      } else {
+
+        targetServiceResponse = await axiosInstance.get(targetServiceUrl + '/test');  
+      }
       
       res.json({
         service: serviceName,
@@ -78,7 +93,7 @@ app.get('/test', async (req, res) => {
         accountResponse: targetServiceResponse.data
       });
     } catch (error) {
-      res.status(200).json({ error: `Error connecting to ${serviceName}` });
+      res.status(200).json({ error: `Error connecting to ${serviceName}`, errorDetail: error });
     }
 
   }
