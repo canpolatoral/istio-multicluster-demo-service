@@ -4,7 +4,7 @@ import morgan from 'morgan';
 
 const app = express();
 
-app.use(morgan('combined'))
+app.use(morgan('combined', {skip: (req, res) => req.url === '/health'}))
 
 const serviceName = process.env.SERVICE_NAME || 'receiver-service';
 const version = process.env.VERSION || 'v1';
@@ -25,6 +25,10 @@ app.get('/test', (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.json({ service: serviceName, version: version });
+});
+
+app.get('/health', (req, res) => {
   res.json({ service: serviceName, version: version });
 });
 

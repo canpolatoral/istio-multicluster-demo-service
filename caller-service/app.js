@@ -7,7 +7,7 @@ import morgan from 'morgan';
 
 const app = express();
 
-app.use(morgan('combined'))
+app.use(morgan('combined', {skip: (req, res) => req.url === '/health'}))
 
 const axiosInstance = axios.create();
 axiosInstance.interceptors.request.use(AxiosLogger.requestLogger);
@@ -38,7 +38,6 @@ const clientSecret = process.env.CLIENT_SECRET;
 // const clientSecret = 'test-secret';
 // const jwtAuthUrl = 'http://172.18.0.10/realms/test/protocol/openid-connect/token';
 //////////
-
 
 app.get('/test', async (req, res) => {
 
@@ -101,6 +100,10 @@ app.get('/test', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
+  res.json({ service: serviceName, version: version });
+});
+
+app.get('/health', (req, res) => {
   res.json({ service: serviceName, version: version });
 });
 
